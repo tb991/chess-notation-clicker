@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chess Move Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 60px);
+      grid-template-rows: repeat(8, 60px);
+      border: 4px solid #333;
+    }
+    .square {
+      cursor: pointer;
+      user-select: none;
+    }
+    .light {
+      background-color: #eee;
+    }
+    .dark {
+      background-color: #769656;
+    }
+    .selected {
+      outline: 3px solid yellow;
+    }
+    .pieces {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pieces img {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 6px;
+    }
+    .pieces img.selected {
+      border-color: yellow;
+    }
+    .moves {
+      margin-top: 20px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <!-- Chessboard -->
+  <div class="board" id="board"></div>
+
+  <!-- Piece selector -->
+  <div class="pieces" id="pieces">
+    <img src="king.svg" alt="K" data-piece="K">
+    <img src="queen.svg" alt="Q" data-piece="Q">
+    <img src="rook.svg" alt="R" data-piece="R">
+    <img src="bishop.svg" alt="B" data-piece="B">
+    <img src="knight.svg" alt="N" data-piece="N">
+    <img src="takes.png" alt="x" data-piece="x">
+    <img src="check.png" alt="+" data-piece="+">
+    <img src="mate.png" alt="x" data-piece="#">
+  </div>
+
+  <!-- Moves -->
+  <div class="moves" id="moves"><strong>Moves:</strong><br></div>
+
+  <script>
+    const files = ["a","b","c","d","e","f","g","h"];
+    const ranks = [8,7,6,5,4,3,2,1];
+
+    const board = document.getElementById("board");
+    const pieces = document.getElementById("pieces");
+    const movesDiv = document.getElementById("moves");
+
+    let selectedPiece = null;
+
+    // Build chessboard
+    ranks.forEach(rank => {
+      files.forEach((file, i) => {
+        const square = document.createElement("div");
+        square.className = "square " + ((i + rank) % 2 === 0 ? "light" : "dark");
+        square.dataset.square = file + rank;
+        square.addEventListener("click", () => handleSquareClick(square));
+        board.appendChild(square);
+      });
+    });
+
+    // Piece clicks
+    pieces.querySelectorAll("img").forEach(img => {
+      img.addEventListener("click", () => handlePieceClick(img));
+    });
+
+    function handleSquareClick(squareEl) {
+      const square = squareEl.dataset.square;
+      if (selectedPiece) {
+        recordMove(selectedPiece, square);
+      } else {
+        // Pawn move if no piece selected
+        recordMove("", square);
+      }
+    }
+    // these two variabled and subsequent related commands allow two clicks on queen to be a queenside castle and same for king/kingside
+    let queenClickCounter = 0;
+    let kingClickCounter = 0;
+    randomBool = false;
+    function handlePieceClick(imgEl) {
+      const piece = imgEl.dataset.piece;
+      if (piece == "x"){
+      	selectedPiece = selectedPiece + "x";
+      }
+      else if(piece == "+" || piece == "#"){
+      	recordMove(piece, "");
+      }
+      else{
+      	selectedPiece = piece;
+      }
+      if (piece == "Q"){
+        queenClickCounter += 1;
+      }
+      else if (piece == "K"){
+        kingClickCounter += 1;
+      }
+      else{
+      	queenClickCounter = 0;
+      	kingClickCounter = 0;
+      }
+      if (queenClickCounter == 2){
+      	castlesWrite(false);
+      	queenClickCounter = 0;
+      	randomBool = true;
+      }
+      if (kingClickCounter == 2){
+      	castlesWrite(true);
+      	kingClickCounter = 0;
+      	randomBool = true;
+      }
+      clearPieceHighlight();
+      if (randomBool){
+       randomBool = false; // reset
+      }
+      else{
+      	imgEl.classList.add("selected");
+      }
+    }
+
+    function recordMove(piece, square) {
+      if (piece == "+"){
+      	movesDiv.innerHTML += piece;
+      }
+      else{
+      	movesDiv.innerHTML += "<br>" + piece + square;
+      }
+      clearPieceHighlight();
+      selectedPiece = null;
+    }
+    function castlesWrite(kingside){
+    	if (kingside == true){
+    		movesDiv.innerHTML += "O-O" + "<br>";
+    	}
+    	else{
+    		movesDiv.innerHTML += "O-O-O" + "<br>";
+    	}
+      clearPieceHighlight();
+      selectedPiece = null;
+    }
+    function clearPieceHighlight() {
+      document.querySelectorAll(".pieces img").forEach(img => img.classList.remove("selected"));
+    }
+  </script>
+</body>
+</html>
+
